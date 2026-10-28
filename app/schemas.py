@@ -31,6 +31,11 @@ class LeadResponse(BaseModel):
     enquiry: str
     status: str
 
+    # AI-generated lead insights
+    ai_classification: str | None = None
+    ai_reason: str | None = None
+    ai_suggested_action: str | None = None
+
     model_config = ConfigDict(from_attributes=True)
 
 
