@@ -24,6 +24,9 @@ The project demonstrates API development, database integration, input validation
 - Classify leads as High, Medium, or Low potential.
 - Generate an explanation for each classification.
 - Recommend a suggested next action for the sales team.
+- Automatically attempt AI classification when a new lead is created.
+- Store AI classifications, explanations, and suggested actions in the database.
+- Continue saving leads when AI classification fails.
 
 ### Validation and Testing
 - Validate request data using Pydantic.
@@ -220,7 +223,7 @@ GET /leads?search=Example&status=New&skip=0&limit=10
 Run the automated test suite:
 
 ```bash
-python -m pytest -v -p no:cacheprovider
+python -m pytest -v
 ```
 
 The project currently has **10 passing automated tests**, covering core endpoints, lead creation, validation, duplicate prevention, AI classification responses, invalid AI requests, and AI service failure handling.
@@ -241,8 +244,6 @@ The API handles common error scenarios, including:
 
 Potential enhancements include:
 
-- Automatically classify a lead when it is created.
-- Store AI classifications and recommendations in the database.
 - Add lead scoring and prioritization.
 - Add authentication and authorization.
 - Introduce structured logging and more comprehensive tests.

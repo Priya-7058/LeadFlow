@@ -66,7 +66,17 @@ def test_health_check():
     assert response.json() == {"status": "healthy"}
 
 
-def test_create_lead():
+def test_create_lead(monkeypatch):
+    # Mock the AI service so this test doesn't call Gemini.
+    def mock_classify_lead(enquiry):
+        return {
+            "classification": "High",
+            "reason": "Strong buying intent.",
+            "suggested_action": "Contact the customer."
+        }
+
+    monkeypatch.setattr("app.crud.classify_lead", mock_classify_lead)
+
     lead_data = {
         "name": "Test User",
         "email": "testuser@example.com",
@@ -88,7 +98,17 @@ def test_create_lead():
     assert "id" in data
 
 
-def test_duplicate_email():
+def test_duplicate_email(monkeypatch):
+        # Mock Gemini to keep this test fast and predictable.
+    def mock_classify_lead(enquiry):
+        return {
+            "classification": "High",
+            "reason": "Strong buying intent.",
+            "suggested_action": "Contact the customer."
+        }
+
+    monkeypatch.setattr("app.crud.classify_lead", mock_classify_lead)
+    
     lead_data = {
         "name": "Duplicate User",
         "email": "duplicate@example.com",
@@ -215,3 +235,38 @@ def test_ai_classification_handles_service_failure(monkeypatch):
     assert response.json()["detail"] == (
         "AI classification failed. Please try again later."
     )
+
+
+def test_create_lead_when_ai_service_fails(monkeypatch):
+    # Simulate Gemini being unavailable.
+    def mock_classify_lead(enquiry):
+        raise RuntimeError("Simulated AI service failure")
+
+    # Replace the AI function used by the lead creation logic.
+    monkeypatch.setattr(
+        "app.crud.classify_lead",
+        mock_classify_lead
+    )
+
+    lead_data = {
+        "name": "Sneha Patil",
+        "email": "sneha.failure@example.com",
+        "phone": "9876543210",
+        "company": "FutureTech",
+        "enquiry": "We need automation solutions for our business."
+    }
+
+    response = client.post("/leads", json=lead_data)
+
+    # The lead should still be created successfully.
+    assert response.status_code == 201
+
+    data = response.json()
+
+    assert data["name"] == "Sneha Patil"
+    assert data["email"] == "sneha.failure@example.com"
+
+    # AI fields should remain empty when classification fails.
+    assert data["ai_classification"] is None
+    assert data["ai_reason"] is None
+    assert data["ai_suggested_action"] is None
