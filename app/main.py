@@ -3,9 +3,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from app.ai_service import classify_lead
 from app.schemas import LeadClassificationResponse
+import logging
 
 from app.database import engine, Base, get_db
 from app import models, schemas, crud
+
+logger = logging.getLogger(__name__)
 
 # Create database tables if they do not exist.
 Base.metadata.create_all(bind=engine)
@@ -162,6 +165,8 @@ def classify_lead_enquiry(
         return result
 
     except Exception:
+        logger.exception("AI lead classification failed")
+
         raise HTTPException(
             status_code=502,
             detail="AI classification failed. Please try again later."
